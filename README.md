@@ -1,6 +1,6 @@
 # AWS VPC + Network Firewall (Terraform)
 
-## 🚀 Overview
+ Overview
 This Terraform configuration provisions a secure AWS environment spanning **3 Availability Zones** with the following architecture:
 
 1. A **VPC** across 3 AZs
@@ -17,13 +17,13 @@ The configuration is fully **parameterized** via Terraform variables. A single c
 
 ---
 
-## ⚙️ Prerequisites
+##  Prerequisites
 
 - Terraform **v1.4+**
 - AWS credentials configured via:
   - `~/.aws/credentials`, **or**
   - environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-- Optional: `terraform-docs` for auto-generating documentation ([source](https://medium.com/be-tech-with-santander/how-to-create-a-readme-md-for-projects-with-terraform-docs-b9ce7a969b34?utm_source=chatgpt.com)).
+
 
 ---
 
@@ -35,24 +35,16 @@ The configuration is fully **parameterized** via Terraform variables. A single c
    cd terraform_assignment
 Initialize Terraform:
 
-bash
-Copy
-Edit
 terraform init
+
 Review the execution plan:
 
-bash
-Copy
-Edit
-terraform validate
-terraform plan
-Deploy the stack:
 
-bash
-Copy
-Edit
 terraform apply -auto-approve
+
+
 🌐 Configurable Variables (variables.tf)
+
 Variable	Description	Default Value
 aws_region	AWS deployment region	us-east-2
 azs	List of 3 Availability Zones	["us-east-2a","us-east-2b","us-east-2c"]
@@ -69,9 +61,6 @@ Launch an EC2 instance in a private subnet (no public IP). Connect via Session M
 
 From the EC2 instance, run:
 
-bash
-Copy
-Edit
 curl -I http://example.com     # ✅ should succeed (HTTP egress allowed)
 curl -I http://198.51.100.1    # ❌ should timeout or fail (stateful firewall blocks)
 (Optional) Enable Flow and Alert logs for Network Firewall in CloudWatch to monitor traffic and verify rule effectiveness.
