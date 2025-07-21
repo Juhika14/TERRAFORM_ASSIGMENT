@@ -1,6 +1,6 @@
 # AWS VPC + Network Firewall (Terraform)
 
-## 🚀 Project Overview
+## Project Overview
 
 This Terraform-based project provisions a secure AWS network with the following components:
 
@@ -20,7 +20,7 @@ This Terraform-based project provisions a secure AWS network with the following 
 ---
 
 
-## ⚙️ Prerequisites
+##  Prerequisites
 
 - Terraform **v1.4+**
 - AWS credentials set up via one of:
@@ -29,7 +29,7 @@ This Terraform-based project provisions a secure AWS network with the following 
 
 ---
 
-## 📦 Deployment Steps
+##  Deployment Steps
 
 1. Clone this repository:
    ```bash
@@ -53,7 +53,7 @@ Creates the VPC, subnets, IGW, NAT, firewall, and rule groups
 
 Tags each resource accordingly
 
-🧩 Configuration Variables
+**** Configuration Variables
 Defined in variables.tf. Here are the key ones:
 
 Variable	Description	Default
