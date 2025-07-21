@@ -1,94 +1,123 @@
 # AWS VPC + Network Firewall (Terraform)
 
- Overview
-This Terraform configuration provisions a secure AWS environment spanning **3 Availability Zones** with the following architecture:
+## 🚀 Project Overview
 
-1. A **VPC** across 3 AZs
-2. **3 public subnets** (one per AZ)
-3. **3 private subnets** (one per AZ)
-4. **Internet Gateway** for public subnet internet access
-5. **NAT Gateway** to allow private subnets outbound internet access
-6. **AWS Network Firewall** deployed in private subnet(s) with:
-   - A **stateless rule** permitting HTTP/HTTPS egress
-   - A **stateful rule** blocking egress to a specific IP (`198.51.100.1`)
-7. All resources are **tagged** with `Name` and `Environment` for clarity.
+This Terraform-based project provisions a secure AWS network with the following components:
 
-The configuration is fully **parameterized** via Terraform variables. A single command (`terraform apply`) provisions everything.
+1. **VPC** spanning 3 AZs  
+2. **3 public subnets** (one per AZ)  
+3. **3 private subnets** (one per AZ)  
+4. **Internet Gateway** attached to the public subnets  
+5. **NAT Gateway** in one public subnet for private subnet egress  
+6. **AWS Network Firewall** deployed across private subnets, with:
+   - **Stateless rule**: allows outbound HTTP (port 80) and HTTPS (port 443)
+   - **Stateful rule**: blocks outbound traffic to `198.51.100.1`
+7. **Consistent tagging** (`Name`, `Environment`) on all resources  
+
+**Configuration**: Region, AZs, and CIDR ranges are fully parameterized via Terraform variables—no hardcoding.  
+**Deployment**: Run `terraform apply` once to provision all resources.
 
 ---
 
-##  Prerequisites
+
+## ⚙️ Prerequisites
 
 - Terraform **v1.4+**
-- AWS credentials configured via:
-  - `~/.aws/credentials`, **or**
-  - environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-
+- AWS credentials set up via one of:
+  - `~/.aws/credentials`
+  - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables
 
 ---
 
-## 🔧 Deployment Instructions
+## 📦 Deployment Steps
 
-1. Clone the repo:
+1. Clone this repository:
    ```bash
-   git clone https://github.com/Juhika14/terraform_assignment.git
+   git clone https://github.com/yourusername/terraform_assignment.git
    cd terraform_assignment
-Initialize Terraform:
+
+Initialize Terraform and install providers:
 
 terraform init
+(Optional) Validate your configuration:
 
-Review the execution plan:
+terraform validate
+terraform plan
 
 
-terraform apply -auto-approve
+Apply the configuration:
 
+terraform apply -auto-approve  //This single command builds the complete setup:
 
-🌐 Configurable Variables (variables.tf)
+Creates the VPC, subnets, IGW, NAT, firewall, and rule groups
 
-Variable	Description	Default Value
-aws_region	AWS deployment region	us-east-2
+Tags each resource accordingly
+
+🧩 Configuration Variables
+Defined in variables.tf. Here are the key ones:
+
+Variable	Description	Default
+aws_region	AWS Region for deployment	us-east-2
 azs	List of 3 Availability Zones	["us-east-2a","us-east-2b","us-east-2c"]
-vpc_cidr	VPC IP CIDR block	10.0.0.0/16
-public_cidrs	Public subnet CIDRs (1 per AZ)	["10.0.1.0/24","10.0.2.0/24","10.0.3.0/24"]
-private_cidrs	Private subnet CIDRs (1 per AZ)	["10.0.11.0/24","10.0.12.0/24","10.0.13.0/24"]
-blocked_ip	IP to block via stateful rule	198.51.100.1
-environment	Tag value for intuitiveness	dev
+vpc_cidr	VPC CIDR block	10.0.0.0/16
+public_cidrs	Public subnet CIDRs	["10.0.1.0/24","10.0.2.0/24","10.0.3.0/24"]
+private_cidrs	Private subnet CIDRs	["10.0.11.0/24","10.0.12.0/24","10.0.13.0/24"]
+blocked_ip	IP blocked by firewall	198.51.100.1/32
+environment	Tag value for environment	dev
 
-These can be overridden with a terraform.tfvars file.
 
-🔍 Testing the Setup
-Launch an EC2 instance in a private subnet (no public IP). Connect via Session Manager (SSM) or a bastion host.
+** 
+ Testing & Verification**
+Launched an EC2 instance in a private subnet (no public IP) using:
 
-From the EC2 instance, run:
+Session Manager (SSM), or
 
-curl -I http://example.com     # ✅ should succeed (HTTP egress allowed)
-curl -I http://198.51.100.1    # ❌ should timeout or fail (stateful firewall blocks)
-(Optional) Enable Flow and Alert logs for Network Firewall in CloudWatch to monitor traffic and verify rule effectiveness.
+A bastion host in a public subnet
 
-💡 Design Decisions
-Single NAT Gateway deployed in the first public subnet—cost-effective, but not highly available.
+Inside the instance, verified connectivity:
 
-Firewall Ordering: Stateless rules allow HTTP/HTTPS before stateful rules block traffic to disallowed IP.
+# Test case got succeed: HTTP/HTTPS allowed
+curl -I http://example.com
 
-Tagging: All resources include Name and Environment tags for easier tracking and cost management.
+# Test case got failed: blocked HTTP access
+curl -I http://198.51.100.1
+(Optional) Check Network Firewall logs in CloudWatch:
 
-Variable-driven configuration ensures flexibility and reusability (Spacelift best practices).
+Flow logs confirm outbound traffic
 
-⚠️ Assumptions & Limitations
-NAT Gateway isn’t deployed in every AZ—single-point failure is possible.
+Alert logs capture blocked traffic
 
-Logging for Network Firewall isn’t enabled by default (can be added later).
+This validates that your firewall rules and NAT routing are functioning correctly.
 
-Terraform state is local; consider remote state backend (like S3 + DynamoDB) for production environments.
+ 
+ **Design Decisions**
+Single NAT Gateway: Chosen for simplicity and cost-efficiency. Offers egress but not high availability.
 
-🛠️ Future Enhancements
-Enable CloudWatch or Kinesis logging for the firewall
+**Firewall Architecture:**
 
-Deploy multiple NAT Gateways for HA
+Stateless rules first allow only HTTP/HTTPS
 
-Switch to remote state with proper locking
+Stateful rule blocks specific IP, ensuring no accidental access
 
-Integrate CI/CD pipeline with static analysis tools (e.g., tflint, tfsec)
+Subnet structure ensures public resources can access the internet, while private resources are protected
 
-Extend firewall policy with domain filtering (HTTPS/SNI inspection)
+Tagging strategy (Name, Environment) enhances resource discoverability and cost allocation
+
+**Assumptions & Limitations**
+> NAT Gateway is not deployed in every AZ—this is not HA.
+
+> Firewall logging is disabled by default; can be enabled with minor config changes.
+
+> Terraform state is stored locally; production environments should use remote state (S3 + DynamoDB).
+
+****Future Enhancements
+> We can enable CloudWatch/Kinesis logging for Network Firewall
+
+>We can add multiple NAT Gateways (one per AZ) for high availability
+
+>We can mplement remote state backend
+
+>We can integrate CI/CD with linter and audit tools (e.g., pre-commit, tfsec, tflint)
+
+>Expand firewall policy for domain-based filtering or stricter rules
 
